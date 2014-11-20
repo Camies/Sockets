@@ -1,5 +1,6 @@
 ﻿body {
-  padding: 50px;
+  padding: 0;
+  margin: 0;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 a {
@@ -7,6 +8,29 @@ a {
 }
 * {
   box-sizing: border-box;
+}
+.title-bar {
+  height: 50px;
+  width: 100%;
+  margin: 0;
+  padding: 5px;
+  background-color: #dddddd;
+}
+.title-bar .title-inner {
+  width: 100%;
+  max-width: 800px;
+  height: 100%;
+  margin: auto;
+}
+.title-bar .title-inner #btnLogout {
+  float: right;
+  width: 100px;
+  height: 30px;
+  margin-top: 5px;
+}
+.wrap {
+  padding: 50px;
+  padding-top: 5px;
 }
 .auth-wrap {
   width: 240px;
@@ -28,7 +52,8 @@ a {
 }
 .messenger {
   display: none;
-  width: 620px;
+  width: 800px;
+  margin: auto;
 }
 .messenger ul.broadcast {
   width: 500px;
@@ -42,12 +67,18 @@ a {
 }
 .messenger ul.broadcast li {
   padding: 5px;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow: hidden;
 }
 .messenger ul.broadcast li.self {
-  background-color: #dddddd;
+  background-color: #EBEBEB;
+  text-align: right;
 }
 .messenger ul.broadcast li.server {
-  background-color: #3b5998;
+  background-color: #4C6AA9;
 }
 .messenger ul.broadcast li .hashtag {
   color: #2222AA;
@@ -257,4 +288,3 @@ a {
   background-position: 0 -13px;
 }
 /*#endregion*/
-/*# sourceMappingURL=style.css.map */

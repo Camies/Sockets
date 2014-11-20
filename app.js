@@ -73,14 +73,15 @@ var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
 
-	console.log('user connected');
+	console.log('user connected: ' + socket.handshake.address);
 
 	// Authorisation event
 	socket.on('authorise', function (authData) {
 
 		var user = authData.Username;
-		
-		console.log(authData);
+		var host = socket.handshake.address;
+
+		console.log(user + " - " + host);
 		
 		if (Users[user]) {
 
@@ -89,7 +90,7 @@ io.on('connection', function (socket) {
 			return;
 		}
 
-		Users[user] = socket;
+		Users[user] = { Host: host, Socket: socket };
 
 		var allUsers = Object.keys(Users);
 
@@ -101,8 +102,16 @@ io.on('connection', function (socket) {
 	// Broadcast message event
 	socket.on('message broadcast', function (msg) {
 
-		console.log(msg);
-		io.emit('message broadcast', msg);
+		var host = socket.handshake.address;
+
+		console.log(msg.Username + "(" + host + "): " + msg.Message);
+
+		if (!Users[msg.Username])
+			return;
+
+		if (host == Users[msg.Username].Host) {
+			io.emit('message broadcast', msg);
+		}
 	});
 
 	// Private message event
@@ -115,7 +124,7 @@ io.on('connection', function (socket) {
 		if (!Users[to])
 			socket.emit('message failed', { Message: "Could not find user" });
 
-		Users[to].emit('message private', msg);
+		Users[to].Socket.emit('message private', msg);
 
 		//console.log(msg);
 	});
@@ -124,7 +133,7 @@ io.on('connection', function (socket) {
 	socket.on('disconnect', function () {
 
 		for (var u in Users)
-			if (Users[u] == socket) {
+			if (Users[u].Socket == socket) {
 
 				delete Users[u];
 

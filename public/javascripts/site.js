@@ -12,6 +12,10 @@
 
 			Settings.Username.val = val;
 			localStorage["Settings.Username"] = val;
+		},
+		Clear: function () {
+			Settings.Username.val = null;
+			delete localStorage["Settings.Username"];
 		}
 	}
 }
@@ -38,6 +42,10 @@ $(document).ready(function () {
 	}
 
 	$("#txtUsername").focus();
+});
+
+$(window).focus(function () {
+	Messaging.ClearNotification();
 });
 
 var Account = {
@@ -75,10 +83,50 @@ var Account = {
 		} else {
 			alert(msg.Message);
 		}
+	},
+
+	Logout: function () {
+
+		Settings.Username.Clear();
+
+		window.location.reload();
 	}
 };
 
 var Messaging = {
+
+	CanSend: true,
+	UnreadCount: 0,
+
+	Throttle: function () {
+
+		if (Messaging.CanSend) {
+			Messaging.CanSend = false;
+
+			setTimeout(function () {
+				Messaging.CanSend = true;
+			}, 100);
+		}
+	},
+
+	SetNotification: function () {
+
+		var focus = window.document.hasFocus();
+
+		if (!focus) {
+
+			Messaging.UnreadCount++;
+
+			window.document.title = "Sockets (" + Messaging.UnreadCount + ")";
+		}
+	},
+
+	ClearNotification: function () {
+
+		Messaging.UnreadCount = 0;
+
+		window.document.title = "Sockets";
+	},
 
 	PrivateReceived: function (msg) {
 
@@ -91,7 +139,7 @@ var Messaging = {
 	BroadcastReceived: function (msg) {
 
 		var message = Emoticons.Format(msg.Message);
-		
+
 		message = Messaging.FormatHashes(message);
 
 		var isServerMessage = !msg.Username;
@@ -103,6 +151,8 @@ var Messaging = {
 
 		$('#messages').append(li);
 
+		Messaging.SetNotification();
+
 		var objDiv = document.getElementById("messages");
 
 		objDiv.scrollTop = objDiv.scrollHeight;
@@ -110,17 +160,22 @@ var Messaging = {
 
 	BroadcastSend: function () {
 
-		var msgTxt = $('#txtMessage').val().trim();
+		if (Messaging.CanSend) {
 
-		// stop if no message
-		if (!msgTxt)
-			return;
+			var msgTxt = $('#txtMessage').val().trim();
 
-		// Send message event
-		socket.emit('message broadcast', { Username: Settings.Username.Get(), Message: msgTxt });
+			// stop if no message
+			if (!msgTxt)
+				return;
 
-		// reset msg box
-		$('#txtMessage').val('');
+			// Send message event
+			socket.emit('message broadcast', { Username: Settings.Username.Get(), Message: msgTxt });
+
+			// reset msg box
+			$('#txtMessage').val('');
+
+			Messaging.Throttle();
+		}
 
 		return false;
 	},
@@ -140,16 +195,12 @@ var Users = {
 
 	Connected: function (msg) {
 
-		console.log(msg);
-
 		Messaging.BroadcastReceived({ Message: msg.Username + " has connected." })
 
 		Users.UpdateList(msg.Users);
 	},
 
 	Disconnected: function (msg) {
-
-		console.log(msg);
 
 		Messaging.BroadcastReceived({ Message: msg.Username + " has disconnected." })
 
@@ -167,25 +218,22 @@ var Users = {
 }
 
 var Emoticons = {
-	":)": "smile",
-	":(": "frown",
-	":D": "grin",
-	"(Y)": "like",
-	";)": "wink",
-	":P": "tongue",
-	":p": "tongue",
-	":3": "colonthree",
-	":/": "unsure",
-	":O": "gasp",
-	":o": "gasp",
-	":'(": "cry",
-	"^_^": "kiki",
-	"8-)": "glasses",
-	"B|": "sunglasses",
-	"<3": "heart",
-	"-_-": "squint",
-	"o.O": "confused",
-	"O.o": "confused",
+	":)": { RegEx: "\\:\\)", Class: "smile" },
+	":(": { RegEx: "\\:\\(", Class: "frown" },
+	":D": { RegEx: "\\:D", Class: "grin" },
+	"(Y)": { RegEx: "\\([Yy]\\)", Class: "like" },
+	";)": { RegEx: "\\;\\)", Class: "wink" },
+	":p": { RegEx: "\\:[Pp]", Class: "tongue" },
+	":3": { RegEx: "\\:3", Class: "colonthree" },
+	":/": { RegEx: "\\:\\/", Class: "unsure" },
+	":o": { RegEx: "\\:[Oo]", Class: "gasp" },
+	":'(": { RegEx: "\\:\\'\\)", Class: "cry" },
+	"^_^": { RegEx: "\\^\\_\\^", Class: "kiki" },
+	"8-)": { RegEx: "8\\-\\)", Class: "glasses" },
+	"B|": { RegEx: "B\\|", Class: "sunglasses" },
+	"<3": { RegEx: "\\<3", Class: "heart" },
+	"-_-": { RegEx: "\\-\\_\\-", Class: "squint" },
+	"o.O": { RegEx: "[Oo]\\.[Oo]", Class: "confused" },
 
 	Format: function (str) {
 
@@ -193,11 +241,9 @@ var Emoticons = {
 			if (e == "Format")
 				continue;
 
-			var find = "\\" + e.replace(/(.{1})/g, "$1\\");
-			
-			find = find.substring(0, find.length - 1);
+			var find = Emoticons[e].RegEx;
 
-			str = str.replace(new RegExp(find, "g"), "<span class=\"emoticon emoticon_" + Emoticons[e] + "\"></span>");
+			str = str.replace(new RegExp(find, "g"), "<span class=\"emoticon emoticon_" + Emoticons[e].Class + "\"></span>");
 		}
 
 		return str;

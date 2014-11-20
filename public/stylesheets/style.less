@@ -1,7 +1,9 @@
 @light-grey: #DDDDDD;
+@column-width: 800px;
 
 body {
-	padding: 50px;
+	padding: 0;
+	margin: 0;
 	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -11,6 +13,33 @@ a {
 
 * {
 	box-sizing: border-box;
+}
+
+.title-bar {
+	height: 50px;
+	width: 100%;
+	margin: 0;
+	padding: 5px;
+	background-color: @light-grey;
+
+	.title-inner {
+		width: 100%;
+		max-width: @column-width;
+		height: 100%;
+		margin: auto;
+
+		#btnLogout {
+			float: right;
+			width: 100px;
+			height: 30px;
+			margin-top: 5px;
+		}
+	}
+}
+
+.wrap {
+	padding: 50px;
+	padding-top: 5px;
 }
 
 .auth-wrap {
@@ -36,7 +65,8 @@ a {
 
 .messenger {
 	display: none;
-	width: 620px;
+	width: @column-width;
+	margin: auto;
 
 	ul.broadcast {
 		width: 500px;
@@ -50,13 +80,19 @@ a {
 
 		li {
 			padding: 5px;
+			text-overflow: ellipsis;
+			display: block;
+			max-width: 100%;
+			white-space: normal;
+			overflow: hidden;
 
 			&.self {
-				background-color: @light-grey;
+				background-color: #EBEBEB;
+				text-align: right;
 			}
 
 			&.server {
-				background-color: #3b5998;
+				background-color: #4C6AA9;
 			}
 
 			.hashtag {
