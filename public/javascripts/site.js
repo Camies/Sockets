@@ -82,9 +82,9 @@ var Account = {
 			socket.on("message private", Messaging.PrivateReceived);
 
 			$(".auth-wrap").hide();
-			$(".messenger").show();
+			
+			Messaging.Init();
 
-			$('#txtMessage').focus();
 		} else {
 			alert(msg.Message);
 		}
@@ -102,6 +102,15 @@ var Messaging = {
 
 	CanSend: true,
 	UnreadCount: 0,
+
+	Init: function () {
+
+		$(".messenger").show();
+
+		$('#txtMessage').focus();
+
+
+	},
 
 	Throttle: function () {
 
@@ -150,7 +159,10 @@ var Messaging = {
 		var isServerMessage = !msg.Username;
 		var isSelfMessage = Settings.Username.Get() == msg.Username;
 
-		var li = $('<li' + (isSelfMessage ? " class=\"self\"" : "") + (isServerMessage ? " class=\"server\"" : "") + '>');
+		var li = $('<li>');
+
+		li.attr("class", isSelfMessage ? "self" : isServerMessage ? "server" : "");
+		li.attr("title", msg.Timestamp ? msg.Timestamp : "");
 
 		li.html((!isServerMessage && !isSelfMessage ? msg.Username + ": " : "") + message);
 
@@ -174,7 +186,11 @@ var Messaging = {
 				return;
 
 			// Send message event
-			socket.emit('message broadcast', { Username: Settings.Username.Get(), Message: msgTxt });
+			socket.emit('message broadcast', {
+				Username: Settings.Username.Get(),
+				Message: msgTxt,
+				Timestamp: Helpers.GetTimestamp()
+			});
 
 			// reset msg box
 			$('#txtMessage').val('');
@@ -186,9 +202,13 @@ var Messaging = {
 	},
 
 	KeyUp: function (evt) {
-
+		
 		if (evt.keyCode == KeyCodes.Enter)
 			Messaging.BroadcastSend();
+	},
+
+	KeyPress: function (evt) {
+
 	},
 
 	FormatHashes: function (str) {
@@ -250,6 +270,35 @@ var Emoticons = {
 
 			str = str.replace(new RegExp(find, "g"), "<span class=\"emoticon emoticon_" + Emoticons[e].Class + "\"></span>");
 		}
+
+		return str;
+	}
+}
+
+var Helpers = {
+	GetTimestamp: function () {
+		var d = new Date();
+
+		return Helpers.PadLeft(d.getHours(), 2, "0") + ":" +
+			Helpers.PadLeft(d.getMinutes(), 2, "0");
+	},
+
+	GetDateTime: function () {
+		var d = new Date();
+
+		return Helpers.PadLeft(d.getDate(), 2, "0") + "/" +
+			Helpers.PadLeft(d.getMonth() + 1, 2, "0") + " " +
+			Helpers.PadLeft(d.getHours(), 2, "0") + ":" +
+			Helpers.PadLeft(d.getMinutes(), 2, "0");
+	},
+
+	PadLeft: function (str, length, char) {
+
+		if (typeof (str) !== "string")
+			str = str + "";
+
+		while (str.length < length)
+			str = char + str;
 
 		return str;
 	}
