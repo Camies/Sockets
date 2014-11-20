@@ -76,6 +76,11 @@ var Account = {
 
 			Users.UpdateList(allUsers);
 
+			socket.on("user connected", Users.Connected);
+			socket.on("user disconnected", Users.Disconnected);
+			socket.on("message broadcast", Messaging.BroadcastReceived);
+			socket.on("message private", Messaging.PrivateReceived);
+
 			$(".auth-wrap").hide();
 			$(".messenger").show();
 
@@ -227,7 +232,7 @@ var Emoticons = {
 	":3": { RegEx: "\\:3", Class: "colonthree" },
 	":/": { RegEx: "\\:\\/", Class: "unsure" },
 	":o": { RegEx: "\\:[Oo]", Class: "gasp" },
-	":'(": { RegEx: "\\:\\'\\)", Class: "cry" },
+	":'(": { RegEx: "\\:\\'\\(", Class: "cry" },
 	"^_^": { RegEx: "\\^\\_\\^", Class: "kiki" },
 	"8-)": { RegEx: "8\\-\\)", Class: "glasses" },
 	"B|": { RegEx: "B\\|", Class: "sunglasses" },
@@ -254,8 +259,4 @@ var Emoticons = {
 var socket = io();
 
 // Attach socket "events"
-socket.on("message broadcast", Messaging.BroadcastReceived);
-socket.on("message private", Messaging.PrivateReceived);
 socket.on("login response", Account.LoginResponse);
-socket.on("user connected", Users.Connected);
-socket.on("user disconnected", Users.Disconnected);
